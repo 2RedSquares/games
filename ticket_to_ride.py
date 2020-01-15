@@ -1,3 +1,4 @@
+import functools
 import json
 import logging
 import random
@@ -6,28 +7,38 @@ log = logging.getLogger("ticket_to_ride")
 log.setLevel(logging.DEBUG)
 
 
-class State:
-    trainCards = {}
+def compose(*functions):
+    def compose2(f, g):
+        return lambda x: f(g(x))
+    return functools.reduce(compose2, functions, lambda x: x)
 
 
-def init():
-    with open("init.json") as config:
-        x = json.load(config)
-        state = State()
-        state.trainCards = x["trainCards"]
-        return state
+def configFactory():
+    init = open("init.json")
+    config = json.load(init)
+    init.close()
+
+    def get():
+        return config
+
+    return get
 
 
-def drawCards(draw, deck, num):
-    if (num == 0):
-        return ()
-    else:
-        return (draw(deck),) + drawCards(draw, deck, num - 1)
+def deckFactory(deck, draw):
+    log.debug(deck)
+
+    def drawCards(num):
+        if (num == 0):
+            return ()
+        else:
+            return (draw(deck),) + drawCards(num - 1)
+
+    return drawCards
 
 
-def drawTrainCard(trainCards):
-    colors = list(trainCards.keys())
+def drawTrainCard(deck):
+    colors = list(deck.keys())
     color = colors[random.randint(0, len(colors) - 1)]
-    trainCards[color] = trainCards[color] - 1
+    deck[color] = deck[color] - 1
     log.debug(color)
     return color

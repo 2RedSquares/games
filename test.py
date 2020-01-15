@@ -1,35 +1,38 @@
 import unittest
-from ticket_to_ride import init, drawCards, drawTrainCard
+from ticket_to_ride import configFactory, deckFactory, drawTrainCard
 
 
 colors = [
-            "pink", "white", "black", "green", "red", "orange", "blue",
-            "yellow", "locomotive"
-        ]
+    "pink", "white", "black", "green", "red", "orange", "blue",
+    "yellow", "locomotive"
+]
+
+
+def givenTrainDeck():
+    getConfig = configFactory()
+    drawCards = deckFactory(getConfig()["trainCards"], drawTrainCard)
+    return drawCards
+
+
+def thenCardFromTrainDeck(cards):
+    map(lambda card: unittest.assertIn(card, colors), cards)
 
 
 class TestTicketToRide(unittest.TestCase):
 
-    def test_init(self):
-        state = init()
-        self.assertIsNotNone(state.trainCards)
+    def test_getConfig(self):
+        getConfig = configFactory()
+        self.assertIsNotNone(getConfig()["trainCards"])
 
     def test_drawATrainCard(self):
-        state = init()
-        color = drawTrainCard(state.trainCards)
-        self.assertIn(color, colors)
+        draw = givenTrainDeck()
+        cards = draw(1)
+        thenCardFromTrainDeck(cards)
 
     def test_drawTwoTrainCards(self):
-        state = init()
-        hand = drawCards(drawTrainCard, state.trainCards, 2)
-        self.assertEqual(len(hand), 2)
-        map(lambda x: self.assertIn(x, colors), hand)
-
-    def test_drawFourTrainCards(self):
-        state = init()
-        hand = drawCards(drawTrainCard, state.trainCards, 4)
-        self.assertEqual(len(hand), 4)
-        map(lambda x: self.assertIn(x, colors), hand)
+        draw = givenTrainDeck()
+        cards = draw(2)
+        thenCardFromTrainDeck(cards)
 
 
 if __name__ == '__main__':
